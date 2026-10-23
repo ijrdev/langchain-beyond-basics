@@ -1,0 +1,31 @@
+
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "LangGraph Dev",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "langgraph_cli",
+            "args": [
+                "dev",
+                // "--tunnel",
+                "--no-reload",
+                "--allow-blocking",
+                // "--config",
+                // "langgraph.json"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "subProcess": true
+        }
+    ]
+}

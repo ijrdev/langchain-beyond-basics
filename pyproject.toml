@@ -1,0 +1,17 @@
+[project]
+name = "langchain-beyond-basics"
+version = "0.1.0"
+description = "Practical intermediate and advanced examples for building with LangChain and LangGraph. Explore agents, workflows, human-in-the-loop, memory, streaming, and more."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "colorama==0.4.6",
+    "python-dotenv==1.2.4",
+    "debugpy==1.8.22",
+    "langchain==1.4.6",
+    "langchain-openai==1.7.2",
+    "langgraph==1.2.16",
+    "langgraph-cli[inmem]==0.4.37",
+    "langgraph-supervisor==0.0.31",
+    "langgraph-swarm==0.1.0"
+]

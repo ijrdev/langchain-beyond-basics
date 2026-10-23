@@ -1,0 +1,7 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "supervisor_hitl": "./supervisor_hitl/app.py:compiled_state_graph"
+  },
+  "env": ".env"
+}
