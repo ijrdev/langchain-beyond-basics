@@ -1,13 +1,17 @@
 import os
 
+from deepagents.middleware.subagents import CompiledSubAgent
 from langchain.agents import create_agent
 from langgraph.graph.state import CompiledStateGraph
 from langchain.chat_models import init_chat_model
 
 class BudgetAgent():
     def __init__(self):
+        self.name: str = "budget_agent"
+        self.description: str = "Estima o orçamento da viagem por pessoa ou grupo, organiza custos por categoria e explicita fontes, premissas e valores desconhecidos."
+        
         self.agent: CompiledStateGraph = create_agent(
-            name="budget_agent",
+            name=self.name,
             model=init_chat_model(
                 model= f"{os.getenv('PROVIDER')}:{os.getenv('MODEL')}",
                 api_key=os.getenv("API_KEY"),
@@ -37,3 +41,14 @@ class BudgetAgent():
                 - comparação com o orçamento máximo informado pelo usuário.
             """,
         )
+
+    def as_subagent(self) -> CompiledSubAgent:
+        try:
+            return CompiledSubAgent(
+                name = self.name,
+                description = self.description,
+                runnable = self.agent,
+                mode = "isolated"
+            )
+        except Exception:
+            raise

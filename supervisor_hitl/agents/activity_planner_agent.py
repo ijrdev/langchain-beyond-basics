@@ -1,13 +1,17 @@
 import os
 
+from deepagents.middleware.subagents import CompiledSubAgent
 from langchain.agents import create_agent
 from langgraph.graph.state import CompiledStateGraph
 from langchain.chat_models import init_chat_model
 
 class ActivityPlannerAgent():
     def __init__(self):
+        self.name: str = "activity_planner_agent"
+        self.description: str = "Organiza as atividades pesquisadas em um roteiro por dia, considerando duração, interesses, orçamento e restrições do viajante."
+        
         self.agent: CompiledStateGraph = create_agent(
-            name="activity_planner_agent",
+            name=self.name,
             model=init_chat_model(
                 model= f"{os.getenv('PROVIDER')}:{os.getenv('MODEL')}",
                 api_key=os.getenv("API_KEY"),
@@ -36,3 +40,14 @@ class ActivityPlannerAgent():
                 - estimativas e informações que ainda precisam ser confirmadas.
             """,
         )
+
+    def as_subagent(self) -> CompiledSubAgent:
+        try:
+            return CompiledSubAgent(
+                name = self.name,
+                description = self.description,
+                runnable = self.agent,
+                mode = "isolated"
+            )
+        except Exception:
+            raise

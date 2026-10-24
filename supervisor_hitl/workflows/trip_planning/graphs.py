@@ -15,8 +15,10 @@ class TripPlanningWorkflow():
             self.builder.set_entry_point("agent")
             self.builder.set_finish_point("end")
             
-            self.builder.add_node("agent", self.supervisor_agent.agent.compile())
+            self.builder.add_node("agent", self.supervisor_agent.agent)
             self.builder.add_node("end", self.trip_planning_nodes.end)
+            
+            self.builder.add_edge("agent", "end")
 
             return self.builder.compile()
         except Exception:

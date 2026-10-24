@@ -1,13 +1,17 @@
 import os
 
+from deepagents.middleware.subagents import CompiledSubAgent
 from langchain.agents import create_agent
 from langgraph.graph.state import CompiledStateGraph
 from langchain.chat_models import init_chat_model
 
 class DestinationResearchAgent():
     def __init__(self):
+        self.name: str = "destination_research_agent"
+        self.description: str = "Pesquisa o destino em fontes oficiais e retorna achados relevantes com URLs, separando fatos confirmados de informações pendentes."
+
         self.agent: CompiledStateGraph = create_agent(
-            name="destination_research_agent",
+            name=self.name,
             model=init_chat_model(
                 model= f"{os.getenv('PROVIDER')}:{os.getenv('MODEL')}",
                 api_key=os.getenv("API_KEY"),
@@ -41,3 +45,14 @@ class DestinationResearchAgent():
                 - observações úteis para o agente que montará o roteiro.
             """,
         )
+
+    def as_subagent(self) -> CompiledSubAgent:
+        try:
+            return CompiledSubAgent(
+                name = self.name,
+                description = self.description,
+                runnable = self.agent,
+                mode = "isolated"
+            )
+        except Exception:
+            raise

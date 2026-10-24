@@ -1,8 +1,11 @@
-import os
+import os, json
 
-from langgraph.graph.state import StateGraph
+from deepagents import create_deep_agent
+from deepagents.middleware import SummarizationMiddleware
+from deepagents.backends import StateBackend
+from langchain.agents.middleware import ModelRetryMiddleware, TodoListMiddleware, ToolRetryMiddleware
+from langgraph.graph.state import CompiledStateGraph
 from langchain.chat_models import init_chat_model
-from langgraph_supervisor import create_supervisor
 
 from supervisor_hitl.agents.destination_research_agent import DestinationResearchAgent
 from supervisor_hitl.agents.activity_planner_agent import ActivityPlannerAgent
@@ -10,19 +13,44 @@ from supervisor_hitl.agents.budget_agent import BudgetAgent
 
 class SupervisorAgent():
     def __init__(self):
-        self.agent: StateGraph = create_supervisor(
-            [DestinationResearchAgent().agent, ActivityPlannerAgent().agent, BudgetAgent().agent],
-            supervisor_name="supervisor_agent",
-            parallel_tool_calls=True,
-            output_mode="last_message",
-            add_handoff_messages=False,
-            add_handoff_back_messages=False,
+        self.agent: CompiledStateGraph = create_deep_agent(
+            name="supervisor_agent",
             model=init_chat_model(
                 model= f"{os.getenv('PROVIDER')}:{os.getenv('MODEL')}",
                 api_key=os.getenv("API_KEY"),
                 reasoning_effort=os.getenv("REASONING_EFFORT"),
+                model_kwargs=json.loads(os.getenv("MODEL_KWARGS"))
             ),
-            prompt="""
+            subagents=[
+                ActivityPlannerAgent().as_subagent(),
+                BudgetAgent().as_subagent(),
+                DestinationResearchAgent().as_subagent(),
+            ],
+            middleware=[
+                TodoListMiddleware(),
+                ModelRetryMiddleware(
+                    max_retries=3,
+                    initial_delay=1,
+                    max_delay=5
+                ), 
+                SummarizationMiddleware(
+                    model=init_chat_model(
+                        model= f"{os.getenv('PROVIDER')}:{os.getenv('MODEL')}",
+                        api_key=os.getenv("API_KEY"),
+                        reasoning_effort=os.getenv("REASONING_EFFORT"),
+                    ),
+                    trigger=("tokens", 15_000),
+                    keep=("messages", 10),
+                    backend=StateBackend()
+                ),
+                ToolRetryMiddleware(
+                    max_retries=3,
+                    initial_delay=1,
+                    max_delay=5,
+                    tools=["task"],
+                )
+            ],
+            system_prompt="""
                 Você é o supervisor de um planejador de viagens conversacional.
 
                 Seu trabalho é:
